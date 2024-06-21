@@ -1,20 +1,33 @@
 require_relative 'company'
 require_relative 'instance_counter'
+require_relative 'validation'
 
 class Train
   include Company
   include InstanceCounter
+  include Validation
+
+  NUMBER_FORMAT = /^[\w]{3}-?[\w]{2}$/i.freeze
+  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/.freeze
 
   @@trains = {}
 
   attr_reader :number, :carriages, :speed, :route, :current_station_index
+  attr_accessor :company_name
 
-  def initialize(number)
+  validate :number, :presence
+  validate :number, :format, with: NUMBER_FORMAT
+  validate :company_name, :presence
+  validate :company_name, :format, with: COMPANY_NAME_FORMAT
+
+  def initialize(number, company_name)
     @number = number
+    @company_name = company_name
     @carriages = []
     @speed = 0
     @route = nil
     @current_station_index = nil
+    validate!
     @@trains[number] = self
     register_instance
   end

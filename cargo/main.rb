@@ -7,6 +7,7 @@ require_relative 'lib/passenger_carriage'
 require_relative 'lib/cargo_carriage'
 require_relative 'lib/company'
 require_relative 'lib/instance_counter'
+require_relative 'lib/validation'
 
 class Main
   def initialize
@@ -33,8 +34,7 @@ class Main
       when 9 then move_train_forward
       when 10 then move_train_backward
       when 11 then list_stations_and_trains
-      when 12 then set_company_name
-      when 13 then find_train
+      when 12 then find_train
       else
         puts "Неверный выбор, попробуйте снова"
       end
@@ -56,16 +56,27 @@ class Main
     puts "9. Переместить поезд вперед по маршруту"
     puts "10. Переместить поезд назад по маршруту"
     puts "11. Просмотреть список станций и список поездов на станции"
-    puts "12. Установить название компании для поезда или вагона"
-    puts "13. Найти поезд по номеру"
+    puts "12. Найти поезд по номеру"
     puts "0. Выйти"
   end
 
   def create_station
-    puts "Введите название станции:"
-    name = gets.chomp
-    @stations << Station.new(name)
-    puts "Станция #{name} создана"
+    loop do
+      begin
+        puts "Введите название станции (только буквы, пробелы и дефисы, не более 30 символов):"
+        puts "Пример: Moscow Central, New York Penn, Berlin Hbf"
+        name = gets.chomp
+        raise "Название станции не может быть пустым" if name.strip.empty?
+        raise "Название станции слишком длинное" if name.length > 30
+        station = Station.new(name)
+        @stations << station
+        puts "Станция #{name} создана"
+        break
+      rescue StandardError => e
+        puts "Ошибка при создании станции: #{e.message}"
+        puts "Пожалуйста, проверьте введенные данные и попробуйте снова."
+      end
+    end
   end
 
   def create_train
@@ -73,31 +84,49 @@ class Main
     puts "1. Пассажирский"
     puts "2. Грузовой"
     type = gets.chomp.to_i
-    puts "Введите номер поезда:"
-    number = gets.chomp
-    puts "Введите название компании:"
-    company_name = gets.chomp
-    train = case type
-            when 1
-              PassengerTrain.new(number)
-            when 2
-              CargoTrain.new(number)
-            else
-              puts "Неверный тип поезда"
-              return
-            end
-    train.company_name = company_name
-    @trains << train
-    puts "#{train.class} поезд #{number} создан, компания: #{company_name}"
+
+    loop do
+      begin
+        puts "Введите номер поезда (формат: три буквы или цифры, необязательный дефис, еще 2 буквы или цифры):"
+        puts "Пример: ABC-12 или 123-DE или AAA11"
+        number = gets.chomp
+        raise "Номер поезда не может быть пустым" if number.strip.empty?
+
+        puts "Введите название компании (только буквы, пробелы, дефисы и апострофы, не более 30 символов):"
+        puts "Пример: Russian Railways, Amtrak, DB"
+        company_name = gets.chomp
+        raise "Название компании не может быть пустым" if company_name.strip.empty?
+
+        train = case type
+                when 1
+                  PassengerTrain.new(number, company_name)
+                when 2
+                  CargoTrain.new(number, company_name)
+                else
+                  raise "Неверный тип поезда"
+                end
+
+        @trains << train
+        puts "#{train.class} поезд #{train.number} создан, компания: #{train.company_name}"
+        break
+      rescue StandardError => e
+        puts "Ошибка при создании поезда: #{e.message}"
+        puts "Пожалуйста, проверьте введенные данные и попробуйте снова."
+      end
+    end
   end
 
   def create_route
-    puts "Введите начальную станцию маршрута:"
+    puts "Выберите начальную станцию маршрута:"
     start_station = select_station
-    puts "Введите конечную станцию маршрута:"
+    puts "Выберите конечную станцию маршрута:"
     end_station = select_station
-    @routes << Route.new(start_station, end_station)
+    route = Route.new(start_station, end_station)
+    @routes << route
     puts "Маршрут создан"
+  rescue StandardError => e
+    puts "Ошибка при создании маршрута: #{e.message}"
+    retry
   end
 
   def add_station_to_route
@@ -105,6 +134,9 @@ class Main
     station = select_station
     route.add_station(station)
     puts "Станция добавлена в маршрут"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def remove_station_from_route
@@ -112,6 +144,9 @@ class Main
     station = select_station
     route.remove_station(station)
     puts "Станция удалена из маршрута"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def assign_route_to_train
@@ -119,34 +154,59 @@ class Main
     route = select_route
     train.assign_route(route)
     puts "Маршрут назначен поезду"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def add_carriage_to_train
     train = select_train
-    puts "Введите название компании вагона:"
-    company_name = gets.chomp
-    carriage = train.is_a?(PassengerTrain) ? PassengerCarriage.new : CargoCarriage.new
-    carriage.company_name = company_name
-    train.add_carriage(carriage)
-    puts "Вагон добавлен к поезду, компания: #{company_name}"
+    loop do
+      begin
+        puts "Введите название компании вагона (только буквы, пробелы, дефисы и апострофы, не более 30 символов):"
+        puts "Пример: Siemens, Bombardier, Alstom"
+        company_name = gets.chomp
+        raise "Название компании не может быть пустым" if company_name.strip.empty?
+        carriage = if train.is_a?(PassengerTrain)
+                     PassengerCarriage.new(company_name)
+                   else
+                     CargoCarriage.new(company_name)
+                   end
+        train.add_carriage(carriage)
+        puts "Вагон добавлен к поезду, компания: #{company_name}"
+        break
+      rescue StandardError => e
+        puts "Ошибка при добавлении вагона: #{e.message}"
+        puts "Пожалуйста, проверьте введенные данные и попробуйте снова."
+      end
+    end
   end
 
   def remove_carriage_from_train
     train = select_train
     train.remove_carriage(train.carriages.last)
     puts "Вагон отцеплен от поезда"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def move_train_forward
     train = select_train
     train.move_forward
     puts "Поезд перемещен вперед"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def move_train_backward
     train = select_train
     train.move_backward
     puts "Поезд перемещен назад"
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def list_stations_and_trains
@@ -188,6 +248,9 @@ class Main
     else
       puts "Неверный выбор"
     end
+  rescue StandardError => e
+    puts "Ошибка: #{e.message}. Попробуйте снова."
+    retry
   end
 
   def find_train
