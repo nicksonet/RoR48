@@ -34,6 +34,10 @@ class Station
     @trains.delete(train)
   end
 
+  def each_train
+    @trains.each { |train| yield(train) if block_given? }
+  end
+
   def trains_by_type(type)
     @trains.select { |train| train.is_a?(type) }
   end
