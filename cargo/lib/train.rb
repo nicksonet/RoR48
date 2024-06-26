@@ -46,6 +46,11 @@ class Train
   def remove_carriage(carriage)
     return unless stopped?
 
+    def update_carriage(updated_carriage)
+      index = @carriages.index { |carriage| carriage.object_id == updated_carriage.object_id }
+      @carriages[index] = updated_carriage if index
+    end
+
     @carriages.delete(carriage)
   end
 
@@ -94,6 +99,11 @@ class Train
 
   def previous_station
     @route.stations[@current_station_index - 1] if @route && @current_station_index > 0
+  end
+
+  def each_carriage
+    return @carriages.to_enum unless block_given?
+    @carriages.each { |carriage| yield(carriage) }
   end
 
   private
