@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'instance_counter'
 require_relative 'validation'
 
@@ -5,25 +7,26 @@ class Station
   include InstanceCounter
   include Validation
 
-  @@stations = []
+  @stations = []
+  class << self
+    attr_reader :stations
+
+    def all
+      @stations
+    end
+  end
 
   attr_reader :name, :trains
 
-  STATION_NAME_FORMAT = /\A[a-zA-Z\s-]{1,30}\z/.freeze
-
   validate :name, :presence
-  validate :name, :format, with: STATION_NAME_FORMAT
+  validate :name, :format, with: /\A[a-zA-Z\s-]{1,30}\z/
 
   def initialize(name)
     @name = name
     @trains = []
     validate!
-    @@stations << self
+    self.class.stations << self
     register_instance
-  end
-
-  def self.all
-    @@stations
   end
 
   def add_train(train)
@@ -34,11 +37,13 @@ class Station
     @trains.delete(train)
   end
 
-  def each_train
-    @trains.each { |train| yield(train) if block_given? }
-  end
-
   def trains_by_type(type)
     @trains.select { |train| train.is_a?(type) }
+  end
+
+  def each_train(&)
+    return to_enum(:each_train) unless block_given?
+
+    @trains.each(&)
   end
 end

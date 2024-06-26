@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative 'company'
 require_relative 'instance_counter'
 require_relative 'validation'
@@ -7,10 +9,18 @@ class Train
   include InstanceCounter
   include Validation
 
-  NUMBER_FORMAT = /^[\w]{3}-?[\w]{2}$/i.freeze
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/.freeze
+  NUMBER_FORMAT = /^[\w]{3}-?[\w]{2}$/i
+  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
 
-  @@trains = {}
+  class << self
+    def trains
+      @trains ||= {}
+    end
+
+    def find(number)
+      trains[number]
+    end
+  end
 
   attr_reader :number, :carriages, :speed, :route, :current_station_index
   attr_accessor :company_name
@@ -28,12 +38,8 @@ class Train
     @route = nil
     @current_station_index = nil
     validate!
-    @@trains[number] = self
+    self.class.trains[number] = self
     register_instance
-  end
-
-  def self.find(number)
-    @@trains[number]
   end
 
   def add_carriage(carriage)
@@ -46,12 +52,12 @@ class Train
   def remove_carriage(carriage)
     return unless stopped?
 
-    def update_carriage(updated_carriage)
-      index = @carriages.index { |carriage| carriage.object_id == updated_carriage.object_id }
-      @carriages[index] = updated_carriage if index
-    end
-
     @carriages.delete(carriage)
+  end
+
+  def update_carriage(updated_carriage)
+    index = @carriages.index { |carriage| carriage.object_id.equal?(updated_carriage.object_id) }
+    @carriages[index] = updated_carriage if index
   end
 
   def speed_up(value)
@@ -60,7 +66,7 @@ class Train
 
   def slow_down(value)
     @speed -= value
-    @speed = 0 if @speed < 0
+    @speed = 0 if @speed.negative?
   end
 
   def stopped?
@@ -98,12 +104,13 @@ class Train
   end
 
   def previous_station
-    @route.stations[@current_station_index - 1] if @route && @current_station_index > 0
+    @route.stations[@current_station_index - 1] if @route && @current_station_index.positive?
   end
 
-  def each_carriage
+  def each_carriage(&)
     return @carriages.to_enum unless block_given?
-    @carriages.each { |carriage| yield(carriage) }
+
+    @carriages.each(&)
   end
 
   private

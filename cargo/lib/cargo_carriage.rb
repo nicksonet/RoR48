@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require_relative 'carriage'
 require_relative 'validation'
 
 class CargoCarriage < Carriage
   include Validation
 
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/.freeze
+  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
 
   attr_reader :total_volume, :occupied_volume
 
@@ -20,12 +22,9 @@ class CargoCarriage < Carriage
   end
 
   def occupy_volume(volume)
-    raise "Недостаточно свободного объема" if volume > available_volume
-    @occupied_volume += volume
-  end
+    raise 'Недостаточно свободного объема' if volume > available_volume
 
-  def occupied_volume
-    @occupied_volume
+    @occupied_volume += volume
   end
 
   def available_volume
