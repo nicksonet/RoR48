@@ -1,13 +1,24 @@
 # frozen_string_literal: true
 
+require_relative 'accessors'
 require_relative 'instance_counter'
 require_relative 'validation'
 
 class Station
   include InstanceCounter
   include Validation
+  include Accessors
+
+  attr_reader :trains
+
+  attr_accessor_with_history :name
+
+  validate :name, :presence
+  validate :name, :format, /^[a-zA-Z\s-]+$/
+  validate :name, :type, String
 
   @stations = []
+
   class << self
     attr_reader :stations
 
@@ -15,11 +26,6 @@ class Station
       @stations
     end
   end
-
-  attr_reader :name, :trains
-
-  validate :name, :presence
-  validate :name, :format, with: /\A[a-zA-Z\s-]{1,30}\z/
 
   def initialize(name)
     @name = name
@@ -38,12 +44,10 @@ class Station
   end
 
   def trains_by_type(type)
-    @trains.select { |train| train.is_a?(type) }
+    @trains.select { |train| train.instance_of?(type) }
   end
 
   def each_train(&)
-    return to_enum(:each_train) unless block_given?
-
     @trains.each(&)
   end
 end

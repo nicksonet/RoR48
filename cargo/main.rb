@@ -10,8 +10,10 @@ require_relative 'lib/cargo_carriage'
 require_relative 'lib/company'
 require_relative 'lib/instance_counter'
 require_relative 'lib/validation'
+require_relative 'lib/accessors'
 require_relative 'modules/train_operations'
 require_relative 'modules/station_operations'
+require_relative 'modules/carriage_helpers'
 require_relative 'modules/route_operations'
 require_relative 'modules/carriage_operations'
 require_relative 'modules/ui_operations'
@@ -23,6 +25,7 @@ class Main
   include StationOperations
   include RouteOperations
   include CarriageOperations
+  include CarriageHelpers
   include UIOperations
   include TestDataOperations
 

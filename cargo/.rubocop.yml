@@ -12,7 +12,7 @@ Metrics/ModuleLength:
   Max: 120  # Увеличиваем максимальное количество строк, которое модуль может содержать.
 
 Metrics/MethodLength:
-  Max: 35  # Увеличиваем максимальную длину метода
+  Max: 40  # Увеличиваем максимальную длину метода
 
 Metrics/AbcSize:
   Max: 55  # Увеличиваем допустимую сложность метода
@@ -52,3 +52,4 @@ Layout/ArgumentAlignment:
 
 Naming/MethodParameterName:
   MinNameLength: 2  # Минимальная длина имени параметра метода
+
