@@ -3,14 +3,23 @@
 require_relative 'company'
 require_relative 'instance_counter'
 require_relative 'validation'
+require_relative 'accessors'
 
 class Train
   include Company
   include InstanceCounter
   include Validation
+  include Accessors
 
-  NUMBER_FORMAT = /^[\w]{3}-?[\w]{2}$/i
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
+  attr_reader :carriages, :route, :number
+
+  attr_accessor_with_history :speed, :current_station_index
+
+  NUMBER_FORMAT = /^[a-z0-9]{3}-?[a-z0-9]{2}$/i
+
+  validate :number, :presence
+  validate :number, :format, NUMBER_FORMAT
+  validate :number, :type, String
 
   class << self
     def trains
@@ -22,55 +31,28 @@ class Train
     end
   end
 
-  attr_reader :number, :carriages, :speed, :route, :current_station_index
-  attr_accessor :company_name
-
-  validate :number, :presence
-  validate :number, :format, with: NUMBER_FORMAT
-  validate :company_name, :presence
-  validate :company_name, :format, with: COMPANY_NAME_FORMAT
-
   def initialize(number, company_name)
     @number = number
-    @company_name = company_name
     @carriages = []
     @speed = 0
     @route = nil
     @current_station_index = nil
+    self.company_name = company_name
     validate!
     self.class.trains[number] = self
     register_instance
   end
 
-  def add_carriage(carriage)
-    return unless type_of_carriage?(carriage)
-    return unless stopped?
+  def stop
+    self.speed = 0
+  end
 
-    @carriages << carriage
+  def add_carriage(carriage)
+    @carriages << carriage if speed.zero? && attachable_carriage?(carriage)
   end
 
   def remove_carriage(carriage)
-    return unless stopped?
-
-    @carriages.delete(carriage)
-  end
-
-  def update_carriage(updated_carriage)
-    index = @carriages.index { |carriage| carriage.object_id.equal?(updated_carriage.object_id) }
-    @carriages[index] = updated_carriage if index
-  end
-
-  def speed_up(value)
-    @speed += value
-  end
-
-  def slow_down(value)
-    @speed -= value
-    @speed = 0 if @speed.negative?
-  end
-
-  def stopped?
-    @speed.zero?
+    @carriages.delete(carriage) if speed.zero? && !@carriages.empty?
   end
 
   def assign_route(route)
@@ -83,7 +65,7 @@ class Train
     return unless next_station
 
     current_station.remove_train(self)
-    @current_station_index += 1
+    self.current_station_index += 1
     current_station.add_train(self)
   end
 
@@ -91,7 +73,7 @@ class Train
     return unless previous_station
 
     current_station.remove_train(self)
-    @current_station_index -= 1
+    self.current_station_index -= 1
     current_station.add_train(self)
   end
 
@@ -108,14 +90,12 @@ class Train
   end
 
   def each_carriage(&)
-    return @carriages.to_enum unless block_given?
-
     @carriages.each(&)
   end
 
-  private
+  protected
 
-  def type_of_carriage?(carriage)
-    raise NotImplementedError, 'Этот метод должен быть переопределен в подклассах'
+  def attachable_carriage?(carriage)
+    raise NotImplementedError, "#{self.class} has not implemented method '#{__method__}'"
   end
 end

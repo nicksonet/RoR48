@@ -2,8 +2,8 @@
 
 module Validation
   def self.included(base)
-    base.extend ClassMethods
-    base.send :include, InstanceMethods
+    base.extend(ClassMethods)
+    base.instance_variable_set(:@validations, [])
   end
 
   module ClassMethods
@@ -11,44 +11,37 @@ module Validation
       @validations ||= []
     end
 
-    def validate(attr_name, type, options = {})
-      validations << { attr_name:, type:, options: }
+    def validate(*args)
+      validations << args
     end
   end
 
-  module InstanceMethods
-    def validate!
-      self.class.validations.each do |validation|
-        value = instance_variable_get("@#{validation[:attr_name]}")
-        send("validate_#{validation[:type]}", value, validation)
-      end
+  def validate!
+    self.class.validations.each do |validation|
+      name, type, *params = validation
+      value = instance_variable_get("@#{name}")
+      send("validate_#{type}", name, value, *params)
     end
+  end
 
-    def valid?
-      validate!
-      true
-    rescue StandardError
-      false
-    end
+  def valid?
+    validate!
+    true
+  rescue StandardError
+    false
+  end
 
-    private
+  private
 
-    def validate_presence(value, validation)
-      return unless value.nil? || value.to_s.strip.empty?
+  def validate_presence(name, value)
+    raise "#{name} can't be nil or empty" if value.nil? || value.to_s.empty?
+  end
 
-      raise "#{validation[:attr_name].to_s.capitalize} не может быть пустым"
-    end
+  def validate_format(name, value, format)
+    raise "#{name} doesn't match the format" unless value.to_s.match?(format)
+  end
 
-    def validate_format(value, validation)
-      return unless value !~ validation[:options][:with]
-
-      raise "#{validation[:attr_name].to_s.capitalize} имеет неверный формат"
-    end
-
-    def validate_type(value, validation)
-      return if value.is_a?(validation[:options])
-
-      raise "#{validation[:attr_name].to_s.capitalize} должен быть типа #{validation[:options]}"
-    end
+  def validate_type(name, value, klass)
+    raise "#{name} is not of type #{klass}" unless value.is_a?(klass)
   end
 end

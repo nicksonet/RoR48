@@ -1,44 +1,34 @@
 # frozen_string_literal: true
 
-require_relative 'carriage'
+require_relative 'company'
 require_relative 'validation'
+require_relative 'accessors'
 
-class PassengerCarriage < Carriage
+class PassengerCarriage
+  include Company
   include Validation
+  include Accessors
 
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
+  attr_reader :occupied_seats_count
+  attr_accessor :total_seats
 
-  attr_reader :total_seats, :occupied_seats
-
-  validate :company_name, :presence
-  validate :company_name, :format, with: COMPANY_NAME_FORMAT
+  validate :total_seats, :presence
+  validate :total_seats, :type, Integer
 
   def initialize(company_name, total_seats)
-    super()
-    @company_name = company_name
     @total_seats = total_seats
-    @occupied_seats = 0
+    @occupied_seats_count = 0
+    self.company_name = company_name
     validate!
   end
 
   def take_seat
-    raise 'Нет свободных мест' if full?
+    raise 'No available seats' if occupied_seats_count >= total_seats
 
-    @occupied_seats += 1
-    @occupied_seats
-  end
-
-  def occupied_seats_count
-    @occupied_seats
+    @occupied_seats_count += 1
   end
 
   def free_seats_count
-    @total_seats - @occupied_seats
-  end
-
-  private
-
-  def full?
-    @occupied_seats == @total_seats
+    total_seats - occupied_seats_count
   end
 end

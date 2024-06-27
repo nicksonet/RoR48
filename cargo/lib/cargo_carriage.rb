@@ -1,28 +1,29 @@
 # frozen_string_literal: true
 
-require_relative 'carriage'
+require_relative 'company'
 require_relative 'validation'
+require_relative 'accessors'
 
-class CargoCarriage < Carriage
+class CargoCarriage
+  include Company
   include Validation
+  include Accessors
 
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
+  attr_reader :occupied_volume
+  attr_accessor :total_volume
 
-  attr_reader :total_volume, :occupied_volume
-
-  validate :company_name, :presence
-  validate :company_name, :format, with: COMPANY_NAME_FORMAT
+  validate :total_volume, :presence
+  validate :total_volume, :type, Float
 
   def initialize(company_name, total_volume)
-    super()
-    @company_name = company_name
     @total_volume = total_volume
     @occupied_volume = 0
+    self.company_name = company_name
     validate!
   end
 
   def occupy_volume(volume)
-    raise 'Недостаточно свободного объема' if volume > available_volume
+    raise "Not enough space. Available: #{available_volume}" if volume > available_volume
 
     @occupied_volume += volume
   end
