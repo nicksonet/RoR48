@@ -1,10 +1,12 @@
+# frozen_string_literal: true
+
 require_relative 'carriage'
 require_relative 'validation'
 
 class PassengerCarriage < Carriage
   include Validation
 
-  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/.freeze
+  COMPANY_NAME_FORMAT = /\A[a-zA-Z\s&'-]{1,30}\z/
 
   attr_reader :total_seats, :occupied_seats
 
@@ -20,7 +22,8 @@ class PassengerCarriage < Carriage
   end
 
   def take_seat
-    raise "Нет свободных мест" if full?
+    raise 'Нет свободных мест' if full?
+
     @occupied_seats += 1
     @occupied_seats
   end

@@ -1,0 +1,54 @@
+AllCops:
+  NewCops: enable
+  TargetRubyVersion: 3.1
+
+Style/Documentation:
+  Enabled: false  # Отключаем проверку документации
+
+Metrics/ClassLength:
+  Max: 150  # Увеличиваем максимальную длину класса
+
+Metrics/ModuleLength:
+  Max: 120  # Увеличиваем максимальное количество строк, которое модуль может содержать.
+
+Metrics/MethodLength:
+  Max: 35  # Увеличиваем максимальную длину метода
+
+Metrics/AbcSize:
+  Max: 55  # Увеличиваем допустимую сложность метода
+
+Metrics/CyclomaticComplexity:
+  Max: 20  # Увеличиваем допустимую цикломатическую сложность
+
+Metrics/PerceivedComplexity:
+  Max: 20  # Увеличиваем допустимую воспринимаемую сложность
+
+Layout/LineLength:
+  Max: 160  # Увеличиваем максимальную длину строки
+
+Style/StringLiterals:
+  EnforcedStyle: single_quotes  # Используем одинарные кавычки для строк
+
+Style/FrozenStringLiteralComment:
+  Enabled: true  # Включаем комментарий frozen_string_literal
+
+Style/SymbolArray:
+  EnforcedStyle: brackets  # Используем квадратные скобки для массивов символов
+
+Style/WordArray:
+  EnforcedStyle: brackets  # Используем квадратные скобки для массивов слов
+
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma  # Ставим запятую после последнего элемента в многострочных массивах
+
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma  # Ставим запятую после последнего элемента в многострочных хэшах
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented  # Отступы для многострочных вызовов методов
+
+Layout/ArgumentAlignment:
+  EnforcedStyle: with_fixed_indentation  # Выравнивание аргументов с фиксированным отступом
+
+Naming/MethodParameterName:
+  MinNameLength: 2  # Минимальная длина имени параметра метода
